@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <!-- Required meta tags -->
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+  <!-- Bootstrap CSS -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/css/bootstrap.min.css">
+  {% block 'head' %} {% endblock %}
+  <link rel="shortcut icon" href="https://cdn-icons-png.flaticon.com/512/1033/1033268.png" type="image/x-icon">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  <script src="https://unpkg.com/boxicons@2.1.4/dist/boxicons.js"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+  <link rel="stylesheet" href="https://code.responsivevoice.org/responsivevoice.css">
+  
+  <script src="https://code.responsivevoice.org/responsivevoice.js"></script>
+
+
+  <title>{% block 'titulo' %}Biblioteca SENAI{% endblock %}</title>
+</head>
+
+<body>
+
+  <button id="botaoToggle" title="Ativar/Desativar leitura de voz" onclick="toggleLeitura()">
+    <i class="material-icons">record_voice_over</i>
+</button>
+
+  {% if usuario_logado %}
+
+
+
+
+  {% endif %}
+  </nav>
+
+
+  {% block 'conteudo' %} {% endblock %}
+
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js"></script>
+
+
+  {% if usuario_logado %}
+
+  
+
+  <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="exampleModalLabel">Opções</h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <button style="margin-left: 10px;" onclick="mostrar_form(1)" class="btn btn-primary">Categoria</button>
+          <button style="margin-left: 10px;" onclick="mostrar_form(2)" class="btn btn-primary">Livro</button>
+          <button style="margin-left: 10px;" onclick="mostrar_form(3)" class="btn btn-primary">Emprestimo</button>
+          <button style="margin-left: 10px;" onclick="mostrar_form(4)" class="btn btn-primary">Devolução</button>
+          <br>
+
+          <hr>
+          <div style="display: none;" id="livro">
+            <form action="{% url 'cadastrar_livro' %}" method="POST" enctype="multipart/form-data">
+              {% csrf_token %}
+              <table>
+                {{form.as_table}}
+              </table>
+
+              <input type="submit" class="btn btn-success" value="Cadastrar">
+
+            </form>
+          </div>
+
+
+          <div style="display: none;" id="categoria">
+            <form action="{% url 'cadastrar_categoria' %}" method="POST">{% csrf_token %}
+              <table>
+                {{form_categoria.as_table}}
+              </table>
+              <input type="hidden" name="usuario" value="{{usuario_logado}}">
+              <input class="btn btn-success" type="submit" value="Enviar">
+            </form>
+          </div>
+
+          <div style="display: none;" id="emprestimos">
+            <button onclick="exibe_input_emprestado(1)" class="btn btn-success">Usuário novo</button>
+            <button onclick="exibe_input_emprestado(2)" class="btn btn-dark">Usuario existente</button>
+            <br>
+            <br>
+            <form id="form_emprestimo" action="{% url 'cadastrar_emprestimo' %}" method="POST">{% csrf_token %}
+              <select style="display: none;" id="nome_emprestado" class="form-control" name="nome_emprestado">
+
+                {% for usuario in usuarios %}
+                <option value="{{usuario.id}}">{{usuario.nome}}</option>
+                {% endfor %}
+
+              </select>
+              <br>
+              <input id="nome_emprestado_anonimo" type="text" placeholder="Digite o nome para quem emprestou..."
+                name="nome_emprestado_anonimo" class="form-control">
+              <br>
+              <select class="form-control" name="livro_emprestado">
+
+                {% for livro in livros_emprestar %}
+                <option value="{{livro.id}}">{{livro.nome}}</option>
+                {% endfor %}
+
+              </select>
+              <br>
+              <input type="submit" value="Emprestar" class="btn btn-success">
+            </form>
+          </div>
+
+          <div style="display: none;" id="devolucao">
+            <form action="{% url 'devolver_livro' %}" method="POST">{% csrf_token %}
+              <select class="form-control" name="id_livro_devolver">
+
+                {% for livro in livros_emprestados %}
+                <option value="{{livro.id}}">{{livro.nome}}</option>
+                {% endfor %}
+
+
+              </select>
+              <br>
+
+              <input type="submit" class="btn btn-success" value="Devolver">
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+
+  <script>
+
+var leituraAtiva = false;
+
+function toggleLeitura() {
+    leituraAtiva = !leituraAtiva;
+
+    if (leituraAtiva) {
+        responsiveVoice.speak("A leitura de texto em voz alta está ativada.", 'Brazilian Portuguese Female');
+    } else {
+        responsiveVoice.speak("A leitura de texto em voz alta está desativada.", 'Brazilian Portuguese Female');
+    }
+}
+
+document.addEventListener('mouseover', function (event) {
+    if (leituraAtiva) {
+        var target = event.target;
+
+        // Verifica se o elemento não possui o atributo aria-live (para evitar duplicatas)
+        if (!target.hasAttribute('aria-live')) {
+            // Obtém o texto do elemento
+            var texto = target.textContent;
+
+            // Fala o texto em voz alta
+            responsiveVoice.speak(texto, 'Brazilian Portuguese Female');
+            
+            // Adiciona o atributo aria-live ao elemento para evitar duplicatas
+            target.setAttribute('aria-live', 'polite');
+        }
+    }
+});
+
+    
+
+
+    window.onload = function () {
+      const sidebar = document.querySelector(".sidebar");
+      const closeBtn = document.querySelector("#btn");
+      const searchBtn = document.querySelector(".bx-search")
+
+      closeBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("open")
+        menuBtnChange()
+      })
+
+      searchBtn.addEventListener("click", function () {
+        sidebar.classList.toggle("open")
+        menuBtnChange()
+      })
+
+      function menuBtnChange() {
+        if (sidebar.classList.contains("open")) {
+          closeBtn.classList.replace("bx-menu", "bx-menu-alt-right")
+        } else {
+          closeBtn.classList.replace("bx-menu-alt-right", "bx-menu")
+        }
+      }
+    }
+
+    function mostrar_form(v1) {
+      categoria = document.getElementById('categoria')
+      livro = document.getElementById('livro')
+      emprestimo = document.getElementById('emprestimos')
+      devolucao = document.getElementById('devolucao')
+
+      if (v1 == 1) {
+        categoria.style.display = 'block';
+
+        devolucao.style.display = 'none';
+        livro.style.display = 'none';
+        emprestimo.style.display = 'none';
+      } else if (v1 == 2) {
+        livro.style.display = 'block';
+
+        devolucao.style.display = 'none';
+        categoria.style.display = 'none';
+        emprestimo.style.display = 'none';
+
+      } else if (v1 == 3) {
+        emprestimo.style.display = 'block';
+
+        devolucao.style.display = 'none';
+        categoria.style.display = 'none';
+        livro.style.display = 'none';
+
+      } else if (v1 == 4) {
+        devolucao.style.display = 'block';
+
+        categoria.style.display = 'none';
+        livro.style.display = 'none';
+        emprestimo.style.display = 'none';
+      }
+
+
+    }
+
+    function exibe_input_emprestado(v1) {
+
+      if (v1 == 1) {
+        document.getElementById('nome_emprestado').style.display = "none"
+        document.getElementById('nome_emprestado_anonimo').style.display = "block"
+
+      } else {
+        document.getElementById('nome_emprestado').style.display = "block"
+        document.getElementById('nome_emprestado_anonimo').style.display = "none"
+
+      }
+
+
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
+
+    :root {
+      --color-default: #004f83;
+      --color-second: #0067ac;
+      --color-white: #fff;
+      --color-body: white;
+      --color-light: #e0e0e0;
+    }
+
+
+    * {
+      padding: 0%;
+      margin: 0%;
+      box-sizing: border-box;
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+    }
+
+    #botaoToggle {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background-color: royalblue;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999; /* Garante que o botão esteja acima de outros elementos */
+            border-radius: 8px; /* Adiciona arredondamento ao botão */
+        }
+
+        #botaoToggle i {
+            font-size: 24px;
+        }
+
+        /* Estilo para a dica de ferramenta */
+        #botaoToggle:hover::after {
+            content: attr(title);
+            position: absolute;
+            top: 50%;
+            right: calc(100% + 10px);
+            transform: translateY(-50%);
+            background-color: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 8px;
+            border-radius: 4px;
+            white-space: nowrap;
+            display: none;
+        }
+
+        #botaoToggle:hover::after {
+            display: block;
+        }
+
+    .sidebar {
+      min-height: 100vh;
+      width: 78px;
+      padding: 6px 14px;
+      z-index: 99;
+      background-color: red;
+      transition: all .5s ease;
+      position: fixed;
+      top: 0;
+      left: 0;
+    }
+
+    .card-title {
+      display: -webkit-box;
+      -webkit-box-orient: vertical;
+      -webkit-line-clamp: 2;
+      /* Define o número máximo de linhas */
+      overflow: hidden;
+      text-overflow: ellipsis;
+      /* Adiciona reticências se o texto estiver muito longo */
+    }
+
+
+    .sidebar.open {
+      width: 250px;
+    }
+
+    .sidebar .logo_details {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      position: relative;
+    }
+
+    .sidebar .logo_details .icon {
+      opacity: 0;
+      transition: all 0.5s ease;
+    }
+
+
+
+    .sidebar .logo_details .logo_name {
+      color: var(--color-white);
+      font-size: 22px;
+      font-weight: 600;
+      opacity: 0;
+      transition: all .5s ease;
+    }
+
+    .sidebar.open .logo_details .icon,
+    .sidebar.open .logo_details .logo_name {
+      opacity: 1;
+    }
+
+    .sidebar .logo_details #btn {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      font-size: 23px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .5s ease;
+    }
+
+    .sidebar.open .logo_details #btn {
+      text-align: right;
+    }
+
+    .sidebar i {
+      color: var(--color-white);
+      height: 60px;
+      line-height: 60px;
+      min-width: 50px;
+      font-size: 25px;
+      text-align: center;
+    }
+
+    .sidebar .nav-list {
+      margin-top: 20px;
+      height: 100%;
+    }
+
+    .sidebar li {
+      position: relative;
+      margin: 8px 0;
+      list-style: none;
+    }
+
+    .sidebar li .tooltip {
+      position: absolute;
+      top: -20px;
+      left: calc(100% + 15px);
+      z-index: 3;
+      background-color: var(--color-white);
+      box-shadow: 0 5px 10px rgba(0, 0, 0, 0.3);
+      padding: 6px 14px;
+      font-size: 15px;
+      font-weight: 400;
+      border-radius: 5px;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .sidebar li:hover .tooltip {
+      opacity: 1;
+      pointer-events: auto;
+      transition: all 0.4s ease;
+      top: 50%;
+      transform: translateY(-50%);
+    }
+
+    .sidebar.open li .tooltip {
+      display: none;
+    }
+
+    .sidebar input {
+      font-size: 15px;
+      color: var(--color-white);
+      font-weight: 400;
+      outline: none;
+      height: 35px;
+      width: 35px;
+      border: none;
+      border-radius: 5px;
+      background-color: red;
+      transition: all .5s ease;
+    }
+
+    .sidebar input::placeholder {
+      color: var(--color-light)
+    }
+
+    .sidebar.open input {
+      width: 100%;
+      padding: 0 20px 0 50px;
+    }
+
+    .sidebar .bx-search {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      transform: translateY(-50%);
+      font-size: 22px;
+      background-color: red;
+      color: var(--color-white);
+    }
+
+    .sidebar li a {
+      display: flex;
+      height: 100%;
+      width: 100%;
+      align-items: center;
+      text-decoration: none;
+      background-color: red;
+      position: relative;
+      transition: all .5s ease;
+      z-index: 12;
+    }
+
+    .sidebar li a::after {
+      content: "";
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      transform: scaleX(0);
+      background-color: var(--color-white);
+      border-radius: 5px;
+      transition: transform 0.3s ease-in-out;
+      transform-origin: left;
+      z-index: -2;
+    }
+
+    .sidebar li a:hover::after {
+      transform: scaleX(1);
+      color: var(--color-default)
+    }
+
+    .sidebar li a .link_name {
+      color: var(--color-white);
+      font-size: 15px;
+      font-weight: 400;
+      white-space: nowrap;
+      pointer-events: auto;
+      transition: all 0.4s ease;
+      pointer-events: none;
+      opacity: 0;
+    }
+
+    .sidebar li a:hover .link_name,
+    .sidebar li a:hover i {
+      transition: all 0.5s ease;
+      color: red;
+    }
+
+    .sidebar.open li a .link_name {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .sidebar li i {
+      height: 35px;
+      line-height: 35px;
+      font-size: 18px;
+      border-radius: 5px;
+    }
+
+    .sidebar li.profile {
+      position: fixed;
+      height: 60px;
+      width: 78px;
+      left: 0;
+      bottom: -8px;
+      padding: 10px 20px;
+      overflow: hidden;
+      transition: all .5s ease;
+    }
+
+    .sidebar.open li.profile {
+      width: 250px;
+    }
+
+    .sidebar .profile .profile_details {
+      display: flex;
+      align-items: center;
+      flex-wrap: nowrap;
+      width: 35px;
+    }
+
+    .sidebar li img {
+      height: 45px;
+      width: 45px;
+      object-fit: cover;
+      border-radius: 50%;
+      margin-right: 19px;
+    }
+
+    .sidebar li.profile .name,
+    .sidebar li.profile .designation {
+      font-size: 15px;
+      font-weight: 400;
+      color: var(--color-white);
+      white-space: nowrap;
+    }
+
+    .sidebar li.profile .designation {
+      font-size: 12px;
+    }
+
+    .sidebar .profile #log_out {
+      position: absolute;
+      top: 50%;
+      right: 0;
+      transform: translateY(-50%);
+      background-color: red;
+      width: 100%;
+      height: 60px;
+      line-height: 60px;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: all 0.5s ease;
+    }
+
+    .sidebar.open .profile #log_out {
+      width: 50px;
+      background: none;
+    }
+
+    .home-section {
+      position: relative;
+      background-color: var(--color-body);
+      min-height: 100vh;
+      top: 0;
+      left: 78px;
+      width: calc(100% - 78px);
+      transition: all .5s ease;
+      z-index: 2;
+    }
+
+    .home-section .text {
+      display: inline-block;
+      color: red;
+      font-size: 25px;
+      font-weight: 500;
+      margin: 18px;
+    }
+
+    .sidebar.open~.home-section {
+      left: 250px;
+      width: calc(100% - 250px);
+    }
+
+    * {
+      margin: 0px;
+      padding: 0px;
+    }
+  </style>
+
+
+
+
+</body>
+
+</html>
